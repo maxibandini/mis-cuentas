@@ -1,7 +1,7 @@
 // Guarda la app en el dispositivo para que abra al instante.
 // Si cambiás index.html, subí también este archivo con otro número de versión.
-const VERSION = 'mis-cuentas-v3'
-const ARCHIVOS = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png', './apple-touch-icon.png']
+const VERSION = 'mis-cuentas-v4'
+const ARCHIVOS = ['./', './index.html', './config.js', './manifest.json', './icon-192.png', './icon-512.png', './apple-touch-icon.png']
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(VERSION).then(c => c.addAll(ARCHIVOS)))

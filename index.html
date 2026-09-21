@@ -414,12 +414,9 @@ select.chip{appearance:none;-webkit-appearance:none;border:0;padding-right:30px;
 
 <div id="toast" class="toast" role="status"></div>
 
+<script src="config.js"></script>
 <script>
-// ============ CONFIGURACIÓN ============
-// Pegá acá la URL de tu implementación de Apps Script (termina en /exec)
-const API_URL = 'https://script.google.com/macros/s/AKfycbyyg7JIAPBbAPMdNBnaGJDPUFLpXp2mIC4l0wXKlBe001JEvd02pJMPAN0GvA7sfkvo/exec';
-// ======================================
-
+// API_URL viene de config.js, así cada copia de la app cambia solo ese archivo
 const PARAMS = Object.fromEntries(new URLSearchParams(location.search));
 if (location.search) history.replaceState(null, '', location.pathname);
 const COLORES = ['#FF8A73','#F4C470','#7FB3FF','#C99BFF','#7DDBA9','#FF9EC7','#6FD0E0','#D9B98C','#A5E07A','#9AA3B5'];
@@ -1339,9 +1336,9 @@ $('#loginForm').addEventListener('submit', async e => {
 /* ================= inicio ================= */
 (function iniciar() {
   // La URL buena es la /exec. La de script.googleusercontent.com que queda en el navegador no sirve para POST.
-  if (!/^https:\/\/script\.google\.com\/macros\/s\/[\w-]+\/exec$/.test(API_URL)) {
+  if (typeof API_URL === 'undefined' || !/^https:\/\/script\.google\.com\/macros\/s\/[\w-]+\/exec$/.test(API_URL)) {
     $('#login').hidden = false;
-    $('#loginForm').innerHTML = '<h1>Falta un paso</h1><p>Abrí index.html y pegá en API_URL la URL de la implementación de Apps Script, la que empieza con script.google.com/macros/s/ y termina en /exec.</p>';
+    $('#loginForm').innerHTML = '<h1>Falta un paso</h1><p>Abrí config.js y pegá en API_URL la URL de la implementación de Apps Script, la que empieza con script.google.com/macros/s/ y termina en /exec.</p>';
     return;
   }
   S.clave = ls('mc_clave');

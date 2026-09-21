@@ -26,7 +26,7 @@ iPhone / PC (PWA en GitHub Pages)  ──fetch POST──▶  Apps Script (API, 
 Atajo de iOS (toque posterior)     ──fetch POST──▶  mismo endpoint, modo "atajo"
 ```
 
-- **Frontend** es un solo `index.html` (HTML, CSS y JS sin frameworks ni build) más `manifest.json`, `sw.js` y tres íconos. Publicado en `https://maxibandini.github.io/mis-cuentas/` desde la rama `main`, carpeta raíz.
+- **Frontend** es un solo `index.html` (HTML, CSS y JS sin frameworks ni build) más `config.js` (solo `API_URL`), `manifest.json`, `sw.js` y tres íconos. Publicado en `https://maxibandini.github.io/mis-cuentas/` desde la rama `main`, carpeta raíz.
 - **Backend** es un proyecto de Apps Script vinculado a la planilla (creado desde Extensiones → Apps Script, por eso `getActiveSpreadsheet()` funciona). Implementado como App web, ejecutar como el dueño, acceso "Cualquier usuario". La seguridad la da una clave guardada en Script Properties (`CLAVE`).
 - La copia del código de Apps Script vive en `apps-script/Codigo.gs` de este repo, pero **lo que corre de verdad es lo que está pegado en el editor de Apps Script**. Si cambiás ese archivo, el usuario tiene que pegarlo allá (o usar clasp, ver más abajo) y crear una nueva versión de la implementación.
 
@@ -34,11 +34,13 @@ Atajo de iOS (toque posterior)     ──fetch POST──▶  mismo endpoint, mo
 
 ```
 index.html          App completa (UI, lógica, gráficos SVG propios)
+config.js           Solo API_URL. Cada fork cambia únicamente este archivo
 manifest.json       PWA, íconos y accesos directos "Nuevo gasto" / "Nuevo ingreso"
 sw.js               Service worker, cachea la app (stale-while-revalidate) y las fuentes
 icon-192.png, icon-512.png, apple-touch-icon.png
-_config.yml         Excluye CLAUDE.md y apps-script/ de la publicación
+_config.yml         Excluye CLAUDE.md, README.md y apps-script/ de la publicación
 apps-script/Codigo.gs   Copia del backend
+README.md           Guía de instalación para otra persona (fork, planilla propia, atajo)
 CLAUDE.md           Este archivo
 ```
 
@@ -80,7 +82,7 @@ Todo va por `POST` a la URL `/exec` con `Content-Type: text/plain;charset=utf-8`
 
 ## Frontend, detalles importantes
 
-- `API_URL` está hardcodeada al principio del script en `index.html`. Tiene que ser `https://script.google.com/macros/s/<deploymentId>/exec` (se copia de Implementar → Administrar implementaciones). **No** usar la `script.googleusercontent.com/macros/echo?user_content_key=...` que queda en la barra del navegador al abrir la `/exec`, esa es una respuesta cacheada de un solo GET y el POST falla. `iniciar()` valida el formato y muestra "Falta un paso" si no coincide. La clave **nunca** va en el código (el repo es público). Se pide una vez por dispositivo y se guarda en `localStorage` (`mc_clave`).
+- `API_URL` está en `config.js`, que se carga antes del script principal. Está separado para que los forks (otras personas con su propia planilla) no tengan conflictos al hacer Sync fork. Si cambia la lista de archivos, actualizar `ARCHIVOS` en `sw.js`. Tiene que ser `https://script.google.com/macros/s/<deploymentId>/exec` (se copia de Implementar → Administrar implementaciones). **No** usar la `script.googleusercontent.com/macros/echo?user_content_key=...` que queda en la barra del navegador al abrir la `/exec`, esa es una respuesta cacheada de un solo GET y el POST falla. `iniciar()` valida el formato y muestra "Falta un paso" si no coincide. La clave **nunca** va en el código (el repo es público). Se pide una vez por dispositivo y se guarda en `localStorage` (`mc_clave`).
 - Otras claves de `localStorage` son `mc_datos2` (cache de movs, cats y url para abrir al instante) y `mc_oculto` (ocultar montos).
 - Las operaciones son optimistas. Se actualiza la UI, se llama a la API y si falla se revierte con un aviso.
 - Al volver a la app (`visibilitychange`) recarga datos en silencio.
@@ -142,3 +144,4 @@ Después Ajustes → Accesibilidad → Tocar → Toque posterior → Doble toque
 1. Primero se hizo todo dentro de Apps Script (HtmlService) con clave. Después se sacó la clave usando acceso "Solo yo". Finalmente se movió la UI a GitHub Pages para quitar el cartel de Google, y volvió la clave porque la API tiene que ser pública.
 2. Se agregaron presupuestos, edición, filtros, búsqueda, deshacer, ocultar montos, gráficos y diseño de escritorio a pedido del usuario.
 3. El problema del botón "Otro día" se resolvió con el calendario propio.
+4. Para que un amigo use la app, cada persona hace fork, crea su planilla y su Apps Script, y pone su URL en `config.js` (ver README.md). Alternativa no implementada, que todos usen el mismo sitio con la URL de la API configurable desde el login.

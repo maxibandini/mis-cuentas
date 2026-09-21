@@ -1,4 +1,5 @@
 # Evita que GitHub Pages publique estos archivos
 exclude:
   - CLAUDE.md
+  - README.md
   - apps-script
