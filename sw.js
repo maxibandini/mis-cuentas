@@ -1,6 +1,6 @@
 // Guarda la app en el dispositivo para que abra al instante.
 // Si cambiás index.html, subí también este archivo con otro número de versión.
-const VERSION = 'mis-cuentas-v1'
+const VERSION = 'mis-cuentas-v2'
 const ARCHIVOS = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png', './apple-touch-icon.png']
 
 self.addEventListener('install', e => {

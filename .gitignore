@@ -1,0 +1,5 @@
+# Locales, no van al repo
+.claude/settings.local.json
+.clasprc.json
+node_modules/
+graphify-out/

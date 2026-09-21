@@ -417,7 +417,7 @@ select.chip{appearance:none;-webkit-appearance:none;border:0;padding-right:30px;
 <script>
 // ============ CONFIGURACIÓN ============
 // Pegá acá la URL de tu implementación de Apps Script (termina en /exec)
-const API_URL = 'https://script.googleusercontent.com/macros/echo?user_content_key=AUkAhnTsQI9cJ3bPdbsUXVCr2EuRzDMxjgzlaTwl1GKjfrAmIe67Jxou3Cqn-7mDRTUon0pnUiQhT0hgWcSC5dsZ3PvIT7dqZLMI6eNwCdqaKoCuveZ9OPLomGnqPfnyUQPHigqkeMUJcNiBIHCssb4-faZTzMZ-zRb6L5RHY8uqz8DKmPMv06nPAj_W3zTRJ09-bX8Pk5IUcT2-ZjuN-AZlgTEXIrEHnf8qO4JJ6gdsl9NjIQBTOfFB53JZg1bKiAFPcKZWguDP4Nh9VvApa9F0692-UPF9uA&lib=M467tIYV0B3azDoZmxEB-_JrQkcibqNv4';
+const API_URL = 'https://script.google.com/macros/s/AKfycbyyg7JIAPBbAPMdNBnaGJDPUFLpXp2mIC4l0wXKlBe001JEvd02pJMPAN0GvA7sfkvo/exec';
 // ======================================
 
 const PARAMS = Object.fromEntries(new URLSearchParams(location.search));
@@ -1330,9 +1330,10 @@ $('#loginForm').addEventListener('submit', async e => {
 
 /* ================= inicio ================= */
 (function iniciar() {
-  if (!API_URL.startsWith('https://')) {
+  // La URL buena es la /exec. La de script.googleusercontent.com que queda en el navegador no sirve para POST.
+  if (!/^https:\/\/script\.google\.com\/macros\/s\/[\w-]+\/exec$/.test(API_URL)) {
     $('#login').hidden = false;
-    $('#loginForm').innerHTML = '<h1>Falta un paso</h1><p>Abrí index.html y pegá la URL de Apps Script en la línea que dice API_URL.</p>';
+    $('#loginForm').innerHTML = '<h1>Falta un paso</h1><p>Abrí index.html y pegá en API_URL la URL de la implementación de Apps Script, la que empieza con script.google.com/macros/s/ y termina en /exec.</p>';
     return;
   }
   S.clave = ls('mc_clave');
