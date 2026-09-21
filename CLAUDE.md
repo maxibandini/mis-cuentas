@@ -87,10 +87,11 @@ Todo va por `POST` a la URL `/exec` con `Content-Type: text/plain;charset=utf-8`
 - Las operaciones son optimistas. Se actualiza la UI, se llama a la API y si falla se revierte con un aviso.
 - Al volver a la app (`visibilitychange`) recarga datos en silencio.
 - `?nuevo=1` abre directo el editor de nuevo movimiento, `&tipo=ingreso` lo abre en ingreso. Después se limpia la URL con `history.replaceState`.
-- Vistas Inicio, Movimientos, Gráficos y Ajustes. Barra inferior en celular, menú lateral a partir de 960px (`ESCRITORIO` en el JS, varias reglas en `@media (min-width:960px)`).
+- Vistas Inicio, Movimientos, Gráficos y Ajustes. Barra inferior en celular (cápsula flotante `.nav-in` con 4 pestañas y el `+` redondo aparte a la derecha, pastilla `#navInd` que ubica `moverIndicador()`), menú lateral de vidrio a partir de 960px (`ESCRITORIO` en el JS, varias reglas en `@media (min-width:960px)`).
 - Gráficos hechos a mano en SVG (dona, barras de 6 meses, gasto diario con promedio, evolución del saldo, gasto por día de la semana). Tooltips con `data-tip`. Animaciones por CSS (`.barra`, `.seg`, `.traza` con `pathLength="1"`) y números con `contar()`. Se respeta `prefers-reduced-motion`.
 - El selector de fecha es un **calendario propio** (`renderCal`). El `input type=date` nativo no abría dentro del iframe de Apps Script y se reemplazó. Conviene mantener el calendario propio.
 - Diseño oscuro. Tokens en `:root`, fondo `#12141B`, gasto coral `#FF8A73`, ingreso menta `#7DDBA9`, aviso `#F4C470`. Tipografías Bricolage Grotesque (números) y Figtree (interfaz).
+- Estilo Liquid Glass (pedido el 2026-09-21). Tokens `--vidrio`, `--panel`, `--brillo`, `--brillo-fuerte`, `--desenfoque` en `:root`, manchas de color en `body::before`. `backdrop-filter` solo en lo que flota sobre contenido (barra, editor, toast, login, menú lateral) por rendimiento en iPhone. Las tarjetas son traslúcidas sin desenfoque. Los controles de vidrio crecen al tocarlos (scale > 1). Con `prefers-reduced-transparency` vuelve a superficies sólidas.
 - Montos en pesos argentinos con formato `es-AR`.
 
 ## Cómo publicar cambios
