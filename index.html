@@ -982,6 +982,7 @@ function renderAjustes(v) {
     <div class="lista-aj">
       ${S.url ? `<a class="aj-fila" href="${esc(S.url)}" target="_blank" rel="noopener" style="color:inherit;text-decoration:none"><span class="em">📄</span><span class="nm">Abrir la planilla</span><span class="ds">Google Sheets</span></a>` : ''}
       <button type="button" class="aj-fila" id="btnActualizar"><span class="em">🔄</span><span class="nm">Actualizar datos</span></button>
+      <button type="button" class="aj-fila" id="btnCopiarCats"><span class="em">📋</span><span class="nm">Copiar categorías para el atajo</span></button>
       <button type="button" class="aj-fila" id="btnSalir"><span class="em">🔒</span><span class="nm">Olvidar la clave en este dispositivo</span></button>
       <div class="aj-fila"><span class="em">📊</span><span class="nm">${S.movs.length} movimientos</span><span class="ds">${primera ? 'desde ' + primera.toLocaleDateString('es-AR', { month: 'short', year: 'numeric' }) : ''}</span></div>
     </div></div></div>`;
@@ -1026,6 +1027,12 @@ async function borrarCategoria(e) {
   S.cats = S.cats.filter(c => c !== cat); S.catEdit = null; render();
   try { await llamar('borrarCategoria', { tipo: cat.tipo, nombre: cat.nombre }); guardarCache(); toast('Categoría borrada. Los movimientos se mantienen.', { ok: true }); }
   catch (err) { S.cats.push(cat); render(); toast(errorDe(err)); }
+}
+
+// Una por línea, gastos primero, con el mismo formato que devuelve la API al atajo
+function copiarCategorias() {
+  const texto = ['Gasto', 'Ingreso'].flatMap(tipo => S.cats.filter(c => c.tipo === tipo).map(c => c.emoji + ' ' + c.nombre)).join('\n');
+  navigator.clipboard.writeText(texto).then(() => toast('Categorías copiadas', { ok: true }), () => toast('No se pudo copiar'));
 }
 
 /* ================= editor ================= */
@@ -1264,6 +1271,7 @@ $('#vista').addEventListener('click', e => {
   if (t.closest('#btnNuevaCat')) { S.catEdit = { nuevo: true, nombre: '', emoji: '', presupuesto: 0 }; render(); return; }
   if (t.closest('#btnSwitchOculto')) { $('#btnOjo').click(); return; }
   if (t.closest('#btnActualizar')) { cargar(); return; }
+  if (t.closest('#btnCopiarCats')) { copiarCategorias(); return; }
   if (t.closest('#btnSalir')) { ls('mc_datos2', null); S.movs = []; S.cats = []; S.numeros = {}; render(); pedirClave(); return; }
   mostrarTip(e);
 });

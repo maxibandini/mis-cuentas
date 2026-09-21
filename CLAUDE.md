@@ -71,8 +71,10 @@ Todo va por `POST` a la URL `/exec` con `Content-Type: text/plain;charset=utf-8`
 `monto` siempre se manda positivo, el servidor le pone el signo según el tipo. `agregar` acepta `id` para poder "deshacer" un borrado con el mismo ID.
 
 **Modo atajo.** Body `{ clave, atajo: true, ... }`, responde texto plano pensado para mostrar en una notificación de iOS.
-- `{ accion: "categorias", tipo }` devuelve una categoría por línea con formato `emoji nombre`.
-- `{ tipo, categoria, monto, nota? }` guarda y devuelve un texto con lo guardado, lo que queda del presupuesto de esa categoría y el saldo total. Acepta la categoría con o sin el emoji adelante.
+- `{ accion: "categorias", tipo? }` devuelve una categoría por línea con formato `emoji nombre`. Sin `tipo` devuelve todas, gastos primero.
+- `{ tipo?, categoria, monto, nota? }` guarda y devuelve un texto con lo guardado, lo que queda del presupuesto de esa categoría y el saldo total. Acepta la categoría con o sin el emoji adelante. Sin `tipo`, lo toma de la categoría.
+
+**Latencia.** Apps Script tiene un piso de ~1,4 s por pedido y el primero después de un rato sin uso puede tardar 5 a 16 s (medido el 2026-09-21). Por eso el atajo recomendado tiene las categorías escritas en una acción Texto (Ajustes → "Copiar categorías para el atajo" las copia) y hace un solo pedido. En el backend, abrir las hojas una vez por pedido y leer cada rango una sola vez.
 
 `doGet` solo devuelve un texto para comprobar que la API anda.
 
@@ -105,10 +107,9 @@ Hecho
 - `API_URL` corregida a la `/exec` real (antes tenía la URL echo de googleusercontent y el login no podía funcionar).
 
 Pendiente (en este orden)
-1. Entrar con la clave y probar cargar, editar y borrar un movimiento, y que aparezca en la planilla. Confirmar que se ejecutó `configurar` (sin clave guardada la API responde `CLAVE` igual que con clave incorrecta).
+1. Probar editar y borrar desde la app. Ya se confirmó que entra en la PC con la clave nueva y que el atajo (opción B) guarda.
 2. Instalarla en el iPhone desde Safari (compartir → Agregar a inicio) y en la PC desde Chrome o Edge (Arc no instala PWAs). Borrar el acceso viejo de Apps Script en el iPhone.
-3. Configurar el doble toque (ver abajo).
-4. Opcional, clasp (el usuario todavía no respondió si lo quiere).
+3. Opcional, clasp (el usuario todavía no respondió si lo quiere).
 
 ## Doble toque en iPhone
 
@@ -116,14 +117,23 @@ Limitación de iOS, un atajo que abre una URL la abre en Safari y no en la PWA i
 
 **Opción A.** Atajo con "Abrir URL" a `https://maxibandini.github.io/mis-cuentas/?nuevo=1`.
 
-**Opción B, recomendada, sin abrir la app.**
-1. Elegir de la lista con Gasto e Ingreso.
-2. Obtener contenido de URL, POST, cuerpo JSON con `clave`, `atajo` (booleano Sí), `accion` = `categorias` y `tipo` = elemento elegido.
-3. Dividir texto por nuevas líneas.
-4. Elegir de la lista.
-5. Pedir entrada de tipo número.
-6. Obtener contenido de URL, POST, JSON con `clave`, `atajo` Sí, `tipo`, `categoria` y `monto`.
-7. Mostrar notificación con el resultado.
+**Opción B, sin abrir la app.** Ya configurada por el usuario (2026-09-21), con Gasto/Ingreso y dos pedidos.
+1. Lista con Gasto e Ingreso, Elegir de la lista, Establecer variable `Tipo`.
+2. Obtener contenido de URL, POST, cuerpo JSON con `clave`, `atajo` (booleano), `accion` = `categorias` y `tipo` = variable Tipo.
+3. Dividir texto por nuevas líneas, Elegir de la lista, Establecer variable `Categoria`.
+4. Pedir entrada de tipo número.
+5. Obtener contenido de URL, POST, JSON con `clave`, `atajo`, `tipo`, `categoria` y `monto` (campo tipo Número, no Texto).
+6. Mostrar notificación con el resultado.
+
+**Opción C, recomendada, más rápida.** Un solo pedido y un toque menos. Requiere el backend que infiere el tipo.
+1. Texto con todas las categorías, una por línea (se copian desde Ajustes en la app).
+2. Dividir texto por nuevas líneas, Elegir de la lista.
+3. Pedir entrada de tipo número.
+4. Obtener contenido de URL, POST, JSON con `clave`, `atajo`, `categoria` = elemento elegido y `monto` (Número).
+5. Mostrar notificación.
+Si se agrega o renombra una categoría hay que actualizar el Texto del atajo.
+
+Trampas vistas al armarlo. Las variables se insertan desde la barra sobre el teclado (quedan como pastilla de color), no escribiendo su nombre. Revisar que el campo se llame `categoria`.
 
 Después Ajustes → Accesibilidad → Tocar → Toque posterior → Doble toque → ese atajo.
 

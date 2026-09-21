@@ -28,7 +28,9 @@ const CATEGORIAS_BASE = [
 function configurar() {
   if (!CLAVE_INICIAL || CLAVE_INICIAL === 'cambiame') throw new Error('Primero cambiá CLAVE_INICIAL por tu clave')
   PropertiesService.getScriptProperties().setProperty('CLAVE', CLAVE_INICIAL)
-  hojas_()
+  const h = hojas_()
+  // Planillas de la versión vieja no tenían la columna Presupuesto
+  if (h.cat.getRange(1, 4).getValue() !== 'Presupuesto') h.cat.getRange(1, 4).setValue('Presupuesto')
   Logger.log('Listo. Clave guardada y hojas verificadas.')
 }
 
@@ -69,25 +71,33 @@ function ejecutar_(accion, datos) {
 }
 
 // ---------- Atajo rápido de iPhone ----------
+// Sin tipo, "categorias" devuelve todas (gastos primero) y al guardar el tipo sale de la categoría elegida.
+// Abre las hojas y lee los movimientos una sola vez, cada llamada a la planilla suma tiempo.
 function atajo_(d) {
+  const h = hojas_()
+  const cats = leerCategorias_(h)
   if (d.accion === 'categorias') {
-    const tipo = normalizarTipo_(d.tipo)
-    return leerCategorias_().filter(c => c.tipo === tipo).map(c => c.emoji + ' ' + c.nombre).join('\n')
+    const lista = d.tipo
+      ? cats.filter(c => c.tipo === normalizarTipo_(d.tipo))
+      : cats.filter(c => c.tipo === 'Gasto').concat(cats.filter(c => c.tipo === 'Ingreso'))
+    return lista.map(c => c.emoji + ' ' + c.nombre).join('\n')
   }
-  let categoria = String(d.categoria || '').trim()
-  const cat = leerCategorias_().find(c => c.emoji + ' ' + c.nombre === categoria || c.nombre === categoria)
-  if (cat) categoria = cat.nombre
-  const m = conLock_(() => agregar_({ tipo: d.tipo, monto: d.monto, categoria: categoria, nota: d.nota }))
+  const texto = String(d.categoria || '').trim()
+  const coincide = c => c.emoji + ' ' + c.nombre === texto || c.nombre === texto
+  const cat = cats.find(c => coincide(c) && (!d.tipo || c.tipo === normalizarTipo_(d.tipo))) || cats.find(coincide)
+  const tipo = d.tipo || (cat ? cat.tipo : 'Gasto')
+  const m = conLock_(() => agregar_({ tipo: tipo, monto: d.monto, categoria: cat ? cat.nombre : texto, nota: d.nota }, h))
+  const filas = leer_(h.mov, 6)
   let msg = '✓ ' + m.tipo + ' de ' + fmt_(Math.abs(m.monto)) + ' en ' + m.categoria
   if (cat && cat.presupuesto && m.tipo === 'Gasto') {
     const hoy = new Date()
-    const gastado = leer_(hojas_().mov, 6)
+    const gastado = filas
       .filter(r => r[3] === cat.nombre && Number(r[4]) < 0 && mismoMes_(new Date(r[1]), hoy))
       .reduce((s, r) => s - Number(r[4]), 0)
     const resto = cat.presupuesto - gastado
     msg += resto >= 0 ? '\nTe quedan ' + fmt_(resto) + ' este mes' : '\nTe pasaste ' + fmt_(-resto) + ' este mes'
   }
-  const saldo = leer_(hojas_().mov, 6).reduce((s, r) => s + (Number(r[4]) || 0), 0)
+  const saldo = filas.reduce((s, r) => s + (Number(r[4]) || 0), 0)
   return msg + '\nSaldo ' + fmt_(saldo)
 }
 
@@ -108,8 +118,6 @@ function hojas_() {
     cat.appendRow(['Tipo', 'Nombre', 'Emoji', 'Presupuesto'])
     cat.setFrozenRows(1)
     cat.getRange(2, 1, CATEGORIAS_BASE.length, 4).setValues(CATEGORIAS_BASE)
-  } else if (cat.getRange(1, 4).getValue() !== 'Presupuesto') {
-    cat.getRange(1, 4).setValue('Presupuesto')
   }
   return { ss: ss, mov: mov, cat: cat }
 }
@@ -132,8 +140,8 @@ function conLock_(fn) {
 }
 
 // ---------- Lectura ----------
-function leerCategorias_() {
-  return leer_(hojas_().cat, 4)
+function leerCategorias_(h) {
+  return leer_((h || hojas_()).cat, 4)
     .filter(r => r[1] !== '')
     .map(r => ({ tipo: normalizarTipo_(r[0]), nombre: String(r[1]), emoji: String(r[2] || '•'), presupuesto: Number(r[3]) || 0 }))
 }
@@ -151,7 +159,7 @@ function cargar_() {
       id: String(r[0]), fecha: fechaIso_(r[1]), tipo: normalizarTipo_(r[2]),
       categoria: String(r[3] || 'Extras'), monto: Number(r[4]), nota: String(r[5] || ''),
     }))
-  return { movs: movs, cats: leerCategorias_(), url: h.ss.getUrl() }
+  return { movs: movs, cats: leerCategorias_(h), url: h.ss.getUrl() }
 }
 
 // ---------- Movimientos ----------
@@ -170,10 +178,11 @@ function armar_(d) {
   }
 }
 
-function agregar_(d) {
+function agregar_(d, h) {
   const m = armar_(d)
   const id = d.id && !String(d.id).startsWith('tmp') ? String(d.id) : Utilities.getUuid()
-  hojas_().mov.appendRow([id, m.fecha, m.tipo, m.categoria, m.monto, m.nota])
+  const mov = (h || hojas_()).mov
+  mov.appendRow([id, m.fecha, m.tipo, m.categoria, m.monto, m.nota])
   return salida_(id, m)
 }
 
